@@ -1,0 +1,17 @@
+.game {
+    display: block;
+    
+}
+
+h3 {
+    color: red;
+}
+
+label {
+    color: red;
+    display: inline-block;
+}
+
+.description {
+    color: #777;
+}
