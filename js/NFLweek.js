@@ -1,10 +1,17 @@
-async function logMovies() {
-    const response = await fetch("https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?seasontype=2&week=4");
-    const movies = await response.json();
-    console.log(movies);
+function logMovies() {
+    // const response = await fetch("https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?seasontype=2&week=4");
+    // const movies = await response.json();
+    // // console.log(movies);
+    // return movies;
+
+    fetch("https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?seasontype=2&week=4")
+        .then((response) => {
+            console.log(response);
+            return response.text();
+          })
 }
 
-logMovies();
+// logMovies();
 
 const template = document.createElement("template");
 template.innerHTML = `
@@ -32,12 +39,12 @@ class NFLweek extends HTMLElement {
         shadow.append(template.content.cloneNode(true));
         this.checkbox = shadow.querySelector('input');
 
-
+        // const weekJSON = this.makeAjaxRequest();
+        // console.log('logMovies()');
+        // console.log(logMovies());
 
         const inputs = shadow.querySelectorAll("input");
-        console.log(inputs);
-
-
+        // console.log(inputs);
 
         const radioAway = shadow.getElementById("radioAway");
         radioAway.addEventListener('change', () => {
@@ -46,7 +53,10 @@ class NFLweek extends HTMLElement {
         const radioHome = shadow.getElementById("radioHome");
         radioHome.addEventListener('change', () => {
             this.updatePick(radioHome);
-        });        
+        });
+        
+        const ajaxRequest = logMovies();
+        console.log(ajaxRequest);
         
     }
 
@@ -55,12 +65,12 @@ class NFLweek extends HTMLElement {
     }
 
     attributeChangedCallback(name, oldValue, newValue) {
-        console.log(name, oldValue, newValue);
+        // console.log(name, oldValue, newValue);
         if (name === 'checked') this.updateChecked(newValue);
     }
 
     updateChecked(value) {
-        console.log(value);
+        // console.log(value);
         this.checkbox.checked = value != null && value !== "false";
         // console.log(this.checkbox.checked);
     }
