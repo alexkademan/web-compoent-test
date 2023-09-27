@@ -1,17 +1,3 @@
-function logMovies() {
-    // const response = await fetch("https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?seasontype=2&week=4");
-    // const movies = await response.json();
-    // // console.log(movies);
-    // return movies;
-
-    fetch("https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?seasontype=2&week=4")
-        .then((response) => {
-            console.log(response);
-            return response.text();
-          })
-}
-
-// logMovies();
 
 const template = document.createElement("template");
 template.innerHTML = `
@@ -30,8 +16,6 @@ template.innerHTML = `
     </div>
 `
 
-
-
 class NFLweek extends HTMLElement {
     constructor() {
         super();
@@ -39,12 +23,7 @@ class NFLweek extends HTMLElement {
         shadow.append(template.content.cloneNode(true));
         this.checkbox = shadow.querySelector('input');
 
-        // const weekJSON = this.makeAjaxRequest();
-        // console.log('logMovies()');
-        // console.log(logMovies());
-
         const inputs = shadow.querySelectorAll("input");
-        // console.log(inputs);
 
         const radioAway = shadow.getElementById("radioAway");
         radioAway.addEventListener('change', () => {
@@ -54,10 +33,34 @@ class NFLweek extends HTMLElement {
         radioHome.addEventListener('change', () => {
             this.updatePick(radioHome);
         });
+    }
+
+    connectedCallback() {
+        const timestamp = new Date().getTime() / 1000;
+        const currentWeek = getCurrentWeek(timestamp);
         
-        const ajaxRequest = logMovies();
-        console.log(ajaxRequest);
-        
+        const weekAJAX = this.fetchWeekAjax(currentWeek);
+    }
+
+    async fetchWeekAjax(currentWeek) {
+        const response = await fetch(`https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?seasontype=2&week=${currentWeek}`);
+        const weekJSON = await response.json();
+
+        this.renderWeek(weekJSON);
+    }
+
+    renderWeek(weekJSON) {
+        const days = sortByDays(weekJSON);
+        console.log(days);
+
+        days.map((day) => {
+            console.log(day);
+            this.renderDay(day);
+        })
+    }
+
+    renderDay(day) {
+        shadow.append(template.content.cloneNode(true));
     }
 
     static get observedAttributes() {
@@ -82,3 +85,66 @@ class NFLweek extends HTMLElement {
 }
 
 customElements.define('nfl-week', NFLweek);
+
+
+
+function getCurrentWeek(timestamp) {
+    const weekTimes = {
+        // 1: 1693994400, // 9-06-2023
+        2: 1694599200, // 9-13-2023
+        3: 1695204000, // 9-20-2023
+        4: 1695808800, // 9-27-2023
+        5: 1696413600, // 10-04-2023
+        6: 1697018400, // 10-11-2023
+        7: 1697623200, // 10-18-2023
+        8: 1698228000, // 10-25-2023
+        9: 1698832800, // 11-01-2023
+        10: 1699441200, // 11-08-2023
+        11: 1700046000, // 11-15-2023
+        12: 1700650800, // 11-22-2023
+        13: 1701255600, // 11-29-2023
+        14: 1701860400, // 12-06-2023
+        15: 1702465200, // 12-13-2023
+        16: 1703070000, // 12-20-2023
+        17: 1703674800, // 12-27-2023
+        18: 1704279600, // 1-03-2024
+    }
+
+    let currentWeek = 1;
+    for (const weekNumber in weekTimes) {
+        if (timestamp >= weekTimes[weekNumber]) {
+            currentWeek = weekNumber
+        }
+    }
+
+    return currentWeek;
+}
+
+function sortByDays(weekJSON) {
+    let gameDaysArray = [];
+
+    weekJSON.events.map((game) => {
+        const gameDate = new Date(game.date);
+        const gameMonth = gameDate.getMonth() + 1;
+        const gameDay = gameDate.getDate();
+        const gameYear = gameDate.getFullYear();
+        const fullDateName = `${gameMonth}-${gameDay}-${gameYear}`;
+
+        let newDay = true;
+        gameDaysArray.map((day) => {
+            if (fullDateName === day.fullDateName) {
+                newDay = false;
+                day.games.push(game);
+            }
+        });
+        if (newDay) {
+            gameDaysArray.push({
+                fullDateName,
+                'dateObj': gameDate,
+                'games': [ game ]
+            });
+        }
+    });
+
+    return gameDaysArray;
+}
