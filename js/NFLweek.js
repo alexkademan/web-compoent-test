@@ -1,66 +1,217 @@
 
 const template = document.createElement("template");
 template.innerHTML = `
-    <link rel="stylesheet" href="css/nfl-week.css" media="print" onload="this.media='all'">
-    <div class="game">
-        <label>
-            <slot></slot>
-            <slot name="description" class="description"></slot>            
-        </label>
-
-        <input type="radio" id="radioAway" name="game" "value="away">
-        <input type="radio" id="radioHome" name="game" value="home">
-
-        <label for="radioAway">away</label>
-        <label for="radioHome">home</label>
-    </div>
+    <slot></slot>
 `
 
 class NFLweek extends HTMLElement {
     constructor() {
         super();
-        const shadow = this.attachShadow({ mode: "open" });;
+        const shadow = this.attachShadow({ mode: "open" });
         shadow.append(template.content.cloneNode(true));
-        this.checkbox = shadow.querySelector('input');
-
-        const inputs = shadow.querySelectorAll("input");
-
-        const radioAway = shadow.getElementById("radioAway");
-        radioAway.addEventListener('change', () => {
-            this.updatePick(radioAway);
-        })
-        const radioHome = shadow.getElementById("radioHome");
-        radioHome.addEventListener('change', () => {
-            this.updatePick(radioHome);
-        });
+        this.state = {
+            'currentWeek': false,
+            'currentWeekJSON': false,
+            'weeks': []
+        }
     }
 
     connectedCallback() {
         const timestamp = new Date().getTime() / 1000;
         const currentWeek = getCurrentWeek(timestamp);
         
-        const weekAJAX = this.fetchWeekAjax(currentWeek);
+        this.fetchWeekAjax(currentWeek);
     }
 
     async fetchWeekAjax(currentWeek) {
         const response = await fetch(`https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?seasontype=2&week=${currentWeek}`);
         const weekJSON = await response.json();
 
-        this.renderWeek(weekJSON);
+        this.state.currentWeekJSON = weekJSON;
+        this.renderWeek();
     }
 
-    renderWeek(weekJSON) {
+    renderWeek() {
+        const weekJSON = this.state.currentWeekJSON;
+        document.title = `Week ${weekJSON.week.number} (${weekJSON.events.length} games)`;
         const days = sortByDays(weekJSON);
-        console.log(days);
+        // console.log(days);
+
+        const weekNum = weekJSON.week.number;
+        console.log(`Week ${weekNum}`);
+        this.state.currentWeek = weekNum;
+        if (!this.state.weeks[weekNum]) {
+            this.setBlankWeekState(weekJSON);
+        }
+        // console.log(weekNum);
+        // console.log(this.state.weeks);
+        // console.log(this.state.weeks[weekNum]);
+
+        const weekDiv = document.createElement('week');
+        const gameCount = weekJSON.events.length;
+
+        weekDiv.innerHTML = `
+            <link rel="stylesheet" href="css/nfl-week.css" media="print" onload="this.media='all'">
+            <div class="week week-${weekNum}">
+                <header class="header">
+                    <h1>
+                        <label for="week-selector" class="week-selector"></label>
+                        <span class="week-count">${gameCount} games</span>
+                    </h1>
+                </header>
+            </div>
+        `;
+
+        this.innerHTML = '';
+        this.append(weekDiv);
+        const daysDiv = weekDiv.getElementsByClassName('week')[0];
+        const weekSelector = weekDiv.getElementsByClassName('week-selector')[0];
+
+        weekSelector.prepend(this.renderWeekSelector(weekNum));
 
         days.map((day) => {
-            console.log(day);
-            this.renderDay(day);
+            daysDiv.append(this.renderDay(day));
         })
     }
 
+    setBlankWeekState(weekJSON) {
+        const weekNum = weekJSON.week.number;
+        console.log(`init week number ${weekNum}`);
+        const games = {};
+        for (var i = 0; i < weekJSON.events.length; i++) {
+            const game = weekJSON.events[i];
+            games[game.id] = {
+                'pick': false,
+                'points': false
+            }
+        }
+        this.state.weeks[weekNum] = games;
+    }
+
+    renderWeekSelector(weekNum) {
+        const weekSelector = document.createElement('select');
+        weekSelector.className = 'week-selector';
+        weekSelector.id = 'week-selector';
+
+        for (let i = 1; i < 19; i++) {
+            let selected = '';
+            if (weekNum === i) {
+                selected = ' selected';
+            }
+            weekSelector.innerHTML += `<option value=${i}${selected}>Week ${i}</option>`;
+        }
+
+        weekSelector.addEventListener('change', (e) => {
+            // console.log(weekSelector.options);
+            // console.log(weekSelector.options[weekSelector.options.selectedIndex].value);
+            const newWeek = weekSelector.options[weekSelector.options.selectedIndex].value;
+            this.fetchWeekAjax(newWeek);
+        })
+        return weekSelector;
+    }
+
     renderDay(day) {
-        shadow.append(template.content.cloneNode(true));
+        const dayDiv = document.createElement("day");
+        dayDiv.className = "day";
+        const dayName = getDayName(day.dateObj.getDay());
+        const monthName = getMonthName(day.dateObj.getMonth());
+
+        dayDiv.innerHTML = `
+            <h2>
+                ${dayName}
+                ${monthName}
+                ${day.dateObj.getDate()}
+            </h2>
+        `
+        const gamesDiv = document.createElement('games');
+        gamesDiv.className = 'games';
+
+        day.games.map((game) => {
+            gamesDiv.append(this.renderGame(game));
+        })
+        dayDiv.append(gamesDiv);
+
+        return dayDiv;
+    }
+
+    renderGame(game) {
+        // console.log(this.state.weeks[this.state.currentWeek][game.id]);
+
+        const gameState = this.state.weeks[this.state.currentWeek][game.id];
+        // console.log(gameState);
+        // console.log(gameState.pick);
+
+        const gameDiv = document.createElement("game");
+
+        if (gameState.pick) {
+            gameDiv.className = `game pick-${gameState.pick}`;
+        } else {
+            gameDiv.className = 'game';
+        }
+        const homeTeam = game.competitions[0].competitors[0];
+        const awayTeam = game.competitions[0].competitors[1];
+        
+        // console.log(homeTeam.records[0].summary);
+        let odds = false;
+        if (game.competitions[0].odds) {
+            odds = game.competitions[0].odds;
+            console.log(odds.details);
+        }
+        // const odds = game.competitions[0].odds[0];
+
+        // console.log(odds);
+
+        gameDiv.innerHTML = `
+            <input type="radio" id="away-${game.id}" name="${game.id}" value="away" class="away button">
+            <input type="radio" id="home-${game.id}" name="${game.id}" value="home" class="home button">
+            <label for="away-${game.id}" class="label-away">
+                <img src="images/${awayTeam.team.abbreviation}.png" alt="${awayTeam.team.abbreviation}-logo" />
+                <h3>
+                    ${awayTeam.team.location}
+                    <span class="record">
+                        ${awayTeam.records[0].summary}
+                    </span>
+                </h3>
+            </label>
+            <label for="home-${game.id}" class="label-home">
+                <img src="images/${homeTeam.team.abbreviation}.png" alt="${homeTeam.team.abbreviation}-logo" />
+                <h3>
+                    ${homeTeam.team.location}
+                    <span class="record">
+                        ${homeTeam.records[0].summary}
+                    </span>
+                </h3>
+            </label>
+        `
+
+        const radioButtons = gameDiv.getElementsByClassName("button");
+        for (var i = 0; i < radioButtons.length; i++) {
+            radioButtons[i].addEventListener('change', (e) => {
+                // console.log(e);
+                // console.log(e.target.name);
+                // console.log(e.target.value);
+                // console.log(this.state.currentWeek);
+                const weekNum = this.state.currentWeek;
+                // console.log(this.state.weeks[weekNum][e.target.name]);
+
+                // this.state.weeks[weekNum][e.target.name].pick = e.target.value;
+                // console.log(this.state.weeks[weekNum][e.target.name].pick);
+                this.state.weeks[weekNum][e.target.name].pick = e.target.value;
+                console.log('update the page ???');
+                gameDiv.className = `game pick-${e.target.value}`
+            })
+        }
+
+        const gameFooter = document.createElement('footer');
+        gameFooter.append(this.renderGameFooter(game));
+
+        gameDiv.append(gameFooter);
+
+        return gameDiv;
+    }
+
+    renderGameFooter(game) {
+        return 'footer stuff!!';
     }
 
     static get observedAttributes() {
@@ -74,7 +225,7 @@ class NFLweek extends HTMLElement {
 
     updateChecked(value) {
         // console.log(value);
-        this.checkbox.checked = value != null && value !== "false";
+        // this.checkbox.checked = value != null && value !== "false";
         // console.log(this.checkbox.checked);
     }
 
@@ -86,7 +237,36 @@ class NFLweek extends HTMLElement {
 
 customElements.define('nfl-week', NFLweek);
 
+function getDayName(dayNumber) {
+    dayNames = [
+        'Sun',
+        'Mon',
+        'Tue',
+        'Wed',
+        'Thu',
+        'Fri',
+        'Sat'
+    ];
+    return (dayNames[dayNumber]);
+}
 
+function getMonthName(monthNumber) {
+    monthNames = [
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec'
+    ];
+    return (monthNames[monthNumber]);
+}
 
 function getCurrentWeek(timestamp) {
     const weekTimes = {
