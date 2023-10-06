@@ -23,9 +23,12 @@ class NFLweek extends HTMLElement {
             'weeks': []
         }
 
-        // if (cookie) {
-        //     this.state.weeks = cookie;
-        // }
+        const cookie = this.getCookieByName('nflPicks');
+        console.log(cookie);
+        if (cookie) {
+            console.log(cookie);
+            this.state.weeks = cookie;
+        }
     }
 
     
@@ -155,7 +158,10 @@ class NFLweek extends HTMLElement {
         // console.log(this.state.weeks[this.state.currentWeek][game.id]);
 
         const gameState = this.state.weeks[this.state.currentWeek][game.id];
-        // console.log(gameState);
+        if (game.id === '401547457') {
+            console.log(game.name);
+            console.log(gameState);    
+        }
         // console.log(gameState.pick);
 
         const gameDiv = document.createElement("game");
@@ -174,7 +180,7 @@ class NFLweek extends HTMLElement {
         let awayScore = awayTeam.score;
 
         if (game.status.type.state === 'pre') {
-            console.log(game);
+            // console.log(game);
             const gameDate = new Date(game.date);
             let amPm = 'am';
             let hours = gameDate.getHours();
@@ -192,7 +198,6 @@ class NFLweek extends HTMLElement {
                 awayScore = game.competitions[0].broadcasts[0].names[0];
             }
         }
-
 
         gameDiv.innerHTML = `
             <input type="radio" id="away-${game.id}" name="${game.id}" value="away" class="away button">
@@ -300,28 +305,30 @@ class NFLweek extends HTMLElement {
 
         const andNow = new Date().getTime();
         const expire = new Date(andNow + 8640000000).toUTCString();
-        console.log(this.state.weeks);
-        console.log('this is a note???');
+        // console.log(this.state.weeks);
+        // console.log('this is a note???');
         // const data = JSON.parse(this.state.weeks);
         const data = JSON.stringify(this.state.weeks);;
-        console.log('this is note 2');
-        console.log(this.domain);
-        console.log(expire);
+        // console.log('this is note 2');
+        // console.log(this.domain);
+        // console.log(expire);
         console.log(`nflPicks=${data}; expires=${expire}; domain=${this.domain}; path=/; SameSite=None; Secure`);
         document.cookie = `nflPicks=${data}; expires=${expire}; domain=${this.domain}; path=/; SameSite=None; Secure`;
 
         const jsonString = JSON.stringify(this.state.weeks);
     }
 
-    getCookie(name){
+    getCookieByName(name){
         const cookies = document.cookie.split(';');
         for (var i = 0; i < cookies.length; i++) {
             const thisCookie = cookies[i].trim();
+            console.log(thisCookie);
             if (thisCookie.slice(0, name.length + 1) === `${name}=`) {
                 const cookieString = thisCookie.slice(name.length + 1);
                 return JSON.parse(cookieString);
             } 
         }
+        console.log(`NO COOKIE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!`);
         return false;
     }
     
