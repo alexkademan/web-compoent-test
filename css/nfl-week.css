@@ -45,6 +45,7 @@
 .week .games {
     display: grid;
     grid-template-columns: 1fr;
+    grid-gap: .5rem;
 }
 
 .week .games .game {
@@ -57,7 +58,10 @@ input[type="radio"] {
 }
 
 .week .games label {
-    display: flex;
+    display: grid;
+    grid-template-columns: 2.25rem 2fr 1fr;
+    grid-gap: .5rem;
+
     float: left;
     clear: both;
     width: 100%;
@@ -69,18 +73,26 @@ input[type="radio"] {
     transition-duration: 3s, 5s, 2s, 1s; */
 }
 .week .games label img {
-    padding: .5rem .5rem .5rem 0;
+    padding: 0 .5rem 0 0;
     width: 2em;
     height: 2em;
 }
 .week .games label h3 {
-    line-height: 3em;
+    line-height: 2.25em;
 }
 
 .week .games label h3 .record {
     font-size: smaller;
     color: #999;
 }
+.week .games label h3.team {
+    /* background-color: deeppink; */
+}
+.week .games label h3.score {
+    text-align: right;
+    padding-right: .5rem;
+}
+
 .week .games .pick-home .label-away,
 .week .games .pick-away .label-home {
     background-color: transparent;
@@ -91,7 +103,6 @@ input[type="radio"] {
 .week .games .pick-home .label-home,
 .week .games .pick-away .label-away {
     background-color: #f4f4f4;
-
     filter: saturate(1);
 }
 /* .week .games .game input[type="radio"]:checked+label {
@@ -99,7 +110,7 @@ input[type="radio"] {
 } */
 
 .week .games footer {
-    display: inline-block;
+    display: flex;
     
     width: 100%;
     color: #999;
@@ -107,10 +118,14 @@ input[type="radio"] {
     font-weight: 500;
 }
 
-@media screen and (min-width: 992px) {
+.week .games footer .status {
+    /* background-color: deeppink; */
+    padding: .25rem .3rem;
+}
+
+@media screen and (min-width: 700px) {
     .week .games {
         grid-template-columns: 1fr 1fr;
-        grid-gap: .5rem;
     }
     
 }

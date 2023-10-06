@@ -1,4 +1,4 @@
-
+// document.cookie = "nflExperiment=John Doe; expires=Thu, 18 Dec 2020 12:00:00 UTC; path=/";
 const template = document.createElement("template");
 template.innerHTML = `
     <slot></slot>
@@ -7,20 +7,36 @@ template.innerHTML = `
 class NFLweek extends HTMLElement {
     constructor() {
         super();
+        // document.cookie = "nflExperiment=John Doe; expires=Thu, 18 Dec 2020 12:00:00 UTC; path=/";
         const shadow = this.attachShadow({ mode: "open" });
+        this.docObject = document;
+        this.domain = window.location.hostname;
         shadow.append(template.content.cloneNode(true));
+
+        // const cookie = this.getCookie('nflPicks');
+        // const cookie = this.getCookie('nflExperiment');
+        // console.log(cookie);
+        
         this.state = {
             'currentWeek': false,
             'currentWeekJSON': false,
             'weeks': []
         }
+
+        // if (cookie) {
+        //     this.state.weeks = cookie;
+        // }
     }
+
+    
 
     connectedCallback() {
         const timestamp = new Date().getTime() / 1000;
         const currentWeek = getCurrentWeek(timestamp);
         
         this.fetchWeekAjax(currentWeek);
+        // this.fetchWeekAjax(currentWeek - 1);
+        // this.fetchWeekAjax(4);
     }
 
     async fetchWeekAjax(currentWeek) {
@@ -41,6 +57,7 @@ class NFLweek extends HTMLElement {
         console.log(`Week ${weekNum}`);
         this.state.currentWeek = weekNum;
         if (!this.state.weeks[weekNum]) {
+            console.log(`set up blank week... ${weekNum}`);
             this.setBlankWeekState(weekJSON);
         }
         // console.log(weekNum);
@@ -51,7 +68,6 @@ class NFLweek extends HTMLElement {
         const gameCount = weekJSON.events.length;
 
         weekDiv.innerHTML = `
-            <link rel="stylesheet" href="css/nfl-week.css" media="print" onload="this.media='all'">
             <div class="week week-${weekNum}">
                 <header class="header">
                     <h1>
@@ -111,6 +127,7 @@ class NFLweek extends HTMLElement {
     }
 
     renderDay(day) {
+        // console.log(day);
         const dayDiv = document.createElement("day");
         dayDiv.className = "day";
         const dayName = getDayName(day.dateObj.getDay());
@@ -150,37 +167,55 @@ class NFLweek extends HTMLElement {
         }
         const homeTeam = game.competitions[0].competitors[0];
         const awayTeam = game.competitions[0].competitors[1];
-        
-        // console.log(homeTeam.records[0].summary);
-        let odds = false;
-        if (game.competitions[0].odds) {
-            odds = game.competitions[0].odds;
-            console.log(odds.details);
-        }
-        // const odds = game.competitions[0].odds[0];
 
-        // console.log(odds);
+        // console.log(homeTeam.team.name);
+        // console.log(game.status.type.state);
+        let homeScore = homeTeam.score;
+        let awayScore = awayTeam.score;
+
+        if (game.status.type.state === 'pre') {
+            console.log(game);
+            const gameDate = new Date(game.date);
+            let amPm = 'am';
+            let hours = gameDate.getHours();
+            if (hours > 22) {
+                homeScore = `tba`;    
+            } else {
+                if (hours >= 12) { amPm = 'pm'; }
+                if (hours > 12) { hours = hours - 12; }
+                
+                const minutes = (gameDate.getMinutes() < 10 ? '0' : '') + gameDate.getMinutes();
+                homeScore = `${hours}:${minutes} ${amPm}`;
+            }
+            awayScore = '';
+            if (game.competitions[0].broadcasts[0]) {
+                awayScore = game.competitions[0].broadcasts[0].names[0];
+            }
+        }
+
 
         gameDiv.innerHTML = `
             <input type="radio" id="away-${game.id}" name="${game.id}" value="away" class="away button">
             <input type="radio" id="home-${game.id}" name="${game.id}" value="home" class="home button">
             <label for="away-${game.id}" class="label-away">
-                <img src="images/${awayTeam.team.abbreviation}.png" alt="${awayTeam.team.abbreviation}-logo" />
-                <h3>
+                <img src="images/${awayTeam.team.abbreviation}.png" alt="${awayTeam.team.name}-logo" />
+                <h3 class="team">
                     ${awayTeam.team.location}
                     <span class="record">
                         ${awayTeam.records[0].summary}
                     </span>
                 </h3>
+                <h3 class="score">${homeScore}</h3>
             </label>
             <label for="home-${game.id}" class="label-home">
-                <img src="images/${homeTeam.team.abbreviation}.png" alt="${homeTeam.team.abbreviation}-logo" />
-                <h3>
+                <img src="images/${homeTeam.team.abbreviation}.png" alt="${homeTeam.team.name}-logo" />
+                <h3 class="team">
                     ${homeTeam.team.location}
                     <span class="record">
                         ${homeTeam.records[0].summary}
                     </span>
                 </h3>
+                <h3 class="score">${awayScore}</h3>
             </label>
         `
 
@@ -188,8 +223,12 @@ class NFLweek extends HTMLElement {
         for (var i = 0; i < radioButtons.length; i++) {
             radioButtons[i].addEventListener('change', (e) => {
                 // console.log(e);
-                // console.log(e.target.name);
-                // console.log(e.target.value);
+                this.state.weeks[this.state.currentWeek][e.target.name].pick = e.target.value;
+                this.setCookie();
+                
+                console.log(this.state.currentWeek);
+                console.log(e.target.name);
+                console.log(e.target.value);
                 // console.log(this.state.currentWeek);
                 const weekNum = this.state.currentWeek;
                 // console.log(this.state.weeks[weekNum][e.target.name]);
@@ -197,22 +236,95 @@ class NFLweek extends HTMLElement {
                 // this.state.weeks[weekNum][e.target.name].pick = e.target.value;
                 // console.log(this.state.weeks[weekNum][e.target.name].pick);
                 this.state.weeks[weekNum][e.target.name].pick = e.target.value;
-                console.log('update the page ???');
+                // console.log('update the page ???');
                 gameDiv.className = `game pick-${e.target.value}`
             })
         }
 
-        const gameFooter = document.createElement('footer');
-        gameFooter.append(this.renderGameFooter(game));
-
-        gameDiv.append(gameFooter);
-
+        gameDiv.append(this.renderGameFooter(game));
         return gameDiv;
     }
 
     renderGameFooter(game) {
-        return 'footer stuff!!';
+        const gameFooter = document.createElement('footer');
+        gameFooter.className = "footer";
+
+        // console.log(game.competitions[0].odds[0]);
+        if (game.competitions[0].odds) {
+            const odds = game.competitions[0].odds[0];
+            let overUnder = '';
+            if (odds.overUnder) {
+                overUnder = ` &nbsp; total: ${odds.overUnder}`;
+            }
+            gameFooter.innerHTML = `
+                <div class="status">${odds.details}${overUnder}</div>
+            `;
+        } else if (
+            game.status.type.shortDetail === 'Final' ||
+            game.status.type.shortDetail === 'Final/OT'
+        ) {
+            gameFooter.innerHTML = `
+                <div class="status">${game.status.type.shortDetail}</div>
+            `;
+        }
+
+        // console.log(game.status.type.detail);
+        // console.log(game.status.type.shortDetail);
+        // gameFooter.innerHTML = `footer stuff!!`;
+        return gameFooter;
     }
+
+    saveStateAsCookie() {
+        // var json_str = JSON.stringify(this.state);
+        // createCookie('nflPicks', json_str);
+        console.log(this.docObj);
+        // this.docObj.cookie = 'nflPicks='+ JSON.stringify(this.state);
+    }
+
+    setCookie(action) {
+        // let expire = false;
+        // if (action === 'delete') {
+        //     expire = 'Thu, 01 Jan 1970 00:00:00 GMT';
+        // } else if (action === 'new') {
+        //     // 1000 is one second.
+        //     // 60000 is one minute.
+        //     // 3600000 is one hour.
+        //     // 86400000 is one day.
+        //     const andNow = new Date().getTime();
+        //     expire = new Date(andNow + 86400000).toUTCString();
+        // }
+        // if (expire) {
+        //     // console.log(expire);
+        //     this.docObject.cookie = `nflPicks=${JSON.stringify(this.state)}; expires=` + expire + "; domain=" + this.domain + "; path=/; SameSite=None; Secure";
+        // }
+
+        const andNow = new Date().getTime();
+        const expire = new Date(andNow + 8640000000).toUTCString();
+        console.log(this.state.weeks);
+        console.log('this is a note???');
+        // const data = JSON.parse(this.state.weeks);
+        const data = JSON.stringify(this.state.weeks);;
+        console.log('this is note 2');
+        console.log(this.domain);
+        console.log(expire);
+        console.log(`nflPicks=${data}; expires=${expire}; domain=${this.domain}; path=/; SameSite=None; Secure`);
+        document.cookie = `nflPicks=${data}; expires=${expire}; domain=${this.domain}; path=/; SameSite=None; Secure`;
+
+        const jsonString = JSON.stringify(this.state.weeks);
+    }
+
+    getCookie(name){
+        const cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            const thisCookie = cookies[i].trim();
+            if (thisCookie.slice(0, name.length + 1) === `${name}=`) {
+                const cookieString = thisCookie.slice(name.length + 1);
+                return JSON.parse(cookieString);
+            } 
+        }
+        return false;
+    }
+    
 
     static get observedAttributes() {
         return ["checked", "input"];
@@ -328,3 +440,7 @@ function sortByDays(weekJSON) {
 
     return gameDaysArray;
 }
+
+// function setTestCookie() {
+//     document.cookie = "nflExperiment=John Doe; expires=Thu, 18 Dec 2020 12:00:00 UTC; path=/";
+// }
