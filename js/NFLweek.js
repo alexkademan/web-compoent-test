@@ -311,9 +311,10 @@ class NFLweek extends HTMLElement {
         const data = JSON.stringify(this.state.weeks);;
         // console.log('this is note 2');
         // console.log(this.domain);
-        // console.log(expire);
+        console.log(expire);
         console.log(`nflPicks=${data}; expires=${expire}; domain=${this.domain}; path=/; SameSite=None; Secure`);
         document.cookie = `nflPicks=${data}; expires=${expire}; domain=${this.domain}; path=/; SameSite=None; Secure`;
+        document.cookie = `nflPicks2=this is a cookie; expires=${expire}; domain=${this.domain}; path=/; SameSite=None; Secure`;
 
         const jsonString = JSON.stringify(this.state.weeks);
     }
