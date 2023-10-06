@@ -22,7 +22,10 @@ class NFLweek extends HTMLElement {
             'currentWeekJSON': false,
             'weeks': []
         }
-
+        document.cookie = `nflPicks2=helloworld; expires=Sun, 14 Jan 2024 16:23:02 GMT; domain=192.168.0.100; path=/; SameSite=None; Secure`;
+        console.log(document.cookie);
+        console.log(document.cookies);
+        console.log(document.cookieString);
         const cookie = this.getCookieByName('nflPicks');
         console.log(cookie);
         if (cookie) {
@@ -311,10 +314,10 @@ class NFLweek extends HTMLElement {
         const data = JSON.stringify(this.state.weeks);;
         // console.log('this is note 2');
         // console.log(this.domain);
-        console.log(expire);
+        console.log(this.domain);
         console.log(`nflPicks=${data}; expires=${expire}; domain=${this.domain}; path=/; SameSite=None; Secure`);
         document.cookie = `nflPicks=${data}; expires=${expire}; domain=${this.domain}; path=/; SameSite=None; Secure`;
-        document.cookie = `nflPicks2=this is a cookie; expires=${expire}; domain=${this.domain}; path=/; SameSite=None; Secure`;
+        document.cookie = `nflPicks2=helloworld; expires=Sun, 14 Jan 2024 16:23:02 GMT; domain=192.168.0.100; path=/; SameSite=None; Secure`;
 
         const jsonString = JSON.stringify(this.state.weeks);
     }
