@@ -7,6 +7,7 @@ template.innerHTML = `
 class NFLweek extends HTMLElement {
     constructor() {
         super();
+        document.cookie = `nflPicks=erase; expires=Sun, 14 Jan 2020 16:23:02 GMT; domain=192.168.0.110;`;
         const shadow = this.attachShadow({ mode: "open" });
         this.docObject = document;
         this.domain = window.location.hostname;
@@ -20,15 +21,7 @@ class NFLweek extends HTMLElement {
             'currentWeekJSON': false,
             'weeks': []
         }
-<<<<<<< HEAD
         // console.log(document.cookie);
-=======
-        document.cookie = `nflPicks2=helloworld; expires=Sun, 14 Jan 2024 16:23:02 GMT; domain=192.168.0.100; path=/; SameSite=None`;
-        document.cookie = `nflPicks2=helloworld; expires=Sun, 14 Jan 2024 16:23:02 GMT; domain=192.168.0.100; path=/;`;
-        console.log(document.cookie);
-        console.log(document.cookies);
-        console.log(document.cookieString);
->>>>>>> ff33a476af0bbc1d65b8d8898e763bf39563abb9
         const cookie = this.getCookieByName('nflPicks');
         // console.log(cookie);
         if (cookie) {
@@ -63,18 +56,28 @@ class NFLweek extends HTMLElement {
         }
 
         const weekDiv = document.createElement('week');
+        weekDiv.className = `week week-${weekNum}`;
         const gameCount = weekJSON.events.length;
 
         weekDiv.innerHTML = `
-            <div class="week week-${weekNum}">
-                <header class="header">
-                    <h1>
-                        <label for="week-selector" class="week-selector"></label>
-                        <span class="week-count">${gameCount} games</span>
-                    </h1>
-                </header>
-            </div>
+            <header class="header">
+                <h1>
+                    <label for="week-selector" class="week-selector"></label>
+                    <span class="week-count">${gameCount} games</span>
+                </h1>
+            </header>
+            <section class="week"></section>
+            <footer>
+                <button class="reset">reset</button>
+            </footer>
         `;
+
+        const eraseBtn = weekDiv.getElementsByClassName('reset')[0];
+        eraseBtn.addEventListener('click', (e) => {
+            console.log('erase cookie now.');
+            document.cookie = `nflPicks=False; expires=Thu, 01 Jan 1970 00:00:00 UTC; domain=${this.domain}; path=/;`;
+            location.reload();
+        });
 
         this.innerHTML = '';
         this.append(weekDiv);
@@ -99,7 +102,12 @@ class NFLweek extends HTMLElement {
                 'points': false
             }
         }
-        this.state.weeks[weekNum] = games;
+        // this.state.weeks[weekNum] = games;
+        this.state.weeks[weekNum] = {
+            'submitted': false,
+            weekNum,
+            games
+        };
     }
 
     renderWeekSelector(weekNum) {
@@ -149,8 +157,12 @@ class NFLweek extends HTMLElement {
         return dayDiv;
     }
 
+    updateRenderedWeek() {
+        console.log('update the rendered week now?');
+    }
+
     renderGame(game) {
-        const gameState = this.state.weeks[this.state.currentWeek][game.id];
+        const gameState = this.state.weeks[this.state.currentWeek].games[game.id];
         const gameDiv = document.createElement("game");
 
         if (gameState.pick) {
@@ -215,7 +227,7 @@ class NFLweek extends HTMLElement {
         for (var i = 0; i < radioButtons.length; i++) {
             radioButtons[i].addEventListener('change', (e) => {
                 // console.log(e);
-                this.state.weeks[this.state.currentWeek][e.target.name].pick = e.target.value;
+                this.state.weeks[this.state.currentWeek].games[e.target.name].pick = e.target.value;
                 this.setCookie();
                 
                 console.log(this.state.currentWeek);
@@ -227,7 +239,7 @@ class NFLweek extends HTMLElement {
 
                 // this.state.weeks[weekNum][e.target.name].pick = e.target.value;
                 // console.log(this.state.weeks[weekNum][e.target.name].pick);
-                this.state.weeks[weekNum][e.target.name].pick = e.target.value;
+                this.state.weeks[weekNum].games[e.target.name].pick = e.target.value;
                 // console.log('update the page ???');
                 gameDiv.className = `game pick-${e.target.value}`
             })
@@ -258,12 +270,79 @@ class NFLweek extends HTMLElement {
             gameFooter.innerHTML = `
                 <div class="status">${game.status.type.shortDetail}</div>
             `;
+        } else {
+            gameFooter.innerHTML = `
+                <div class="status"></div>`;
         }
+
+        // console.log(this.state.weeks[game.week.number].games[game.id]);
+        const weekState = this.state.weeks[game.week.number];
+        const gameState = this.state.weeks[game.week.number].games[game.id];
+        // console.log(gameState);
+        // console.log(game.id);
+        let firstOpt = '<option value="false">-</option>';
+
+        if (gameState.points) {
+            firstOpt = `
+                <option value="${gameState.points}">${gameState.points}</option>
+                <option value="false">-</option>
+            `
+        }
+        gameFooter.innerHTML += `
+            <div class="points">
+                <select>
+                    <option value="false">-</option>
+                    ${this.gamePointsSelectOpts(game.id, weekState)}
+                </select>
+            </points>
+        `;
+
+        const pointSelect = gameFooter.getElementsByClassName('points')[0];
+        
+        pointSelect.addEventListener('change', (e) => {
+            console.log(e);
+            console.log(e.target[e.target.selectedIndex]);
+            console.log(e.target[e.target.selectedIndex].value)
+
+            let newPickPoints = e.target[e.target.selectedIndex].value;
+            if (newPickPoints === 'false') {
+                newPickPoints = false;
+            }
+
+            this.state.weeks[game.week.number].games[game.id].points = newPickPoints;
+            this.setCookie();
+        });
 
         // console.log(game.status.type.detail);
         // console.log(game.status.type.shortDetail);
         // gameFooter.innerHTML = `footer stuff!!`;
         return gameFooter;
+    }
+
+    gamePointsSelectOpts(gameId, weekState) {
+        const allGames = this.state.currentWeekJSON.events;
+        const gameCount = this.state.currentWeekJSON.events.length;
+        let opts = '';
+
+        for (let i = 1; i <= gameCount; i = i+1) {
+            let selected = '';
+            let render = true;
+            if (parseInt(weekState.games[gameId].points) === i) {
+                selected = ' selected="selected"';
+            }
+            for (let x = 0; x < allGames.length; x = x + 1) {
+                if (selected === '') {
+                    if (parseInt(weekState.games[allGames[x].id].points) === i) {
+                        // console.log(`dont render ${i}`);
+                        render = false;
+                    }
+                }
+            }
+            if (render) {
+                opts += `<option value="${i}"${selected}>${i}</option>`;
+            }
+        }
+        return opts;
     }
 
     saveStateAsCookie() {
@@ -274,37 +353,13 @@ class NFLweek extends HTMLElement {
     }
 
     setCookie(action) {
-        // let expire = false;
-        // if (action === 'delete') {
-        //     expire = 'Thu, 01 Jan 1970 00:00:00 GMT';
-        // } else if (action === 'new') {
-        //     // 1000 is one second.
-        //     // 60000 is one minute.
-        //     // 3600000 is one hour.
-        //     // 86400000 is one day.
-        //     const andNow = new Date().getTime();
-        //     expire = new Date(andNow + 86400000).toUTCString();
-        // }
-        // if (expire) {
-        //     // console.log(expire);
-        //     this.docObject.cookie = `nflPicks=${JSON.stringify(this.state)}; expires=` + expire + "; domain=" + this.domain + "; path=/; SameSite=None; Secure";
-        // }
-
         const andNow = new Date().getTime();
         const expire = new Date(andNow + 8640000000).toUTCString();
-        // console.log(this.state.weeks);
-        // console.log('this is a note???');
-        // const data = JSON.parse(this.state.weeks);
-        const data = JSON.stringify(this.state.weeks);;
-        // console.log('this is note 2');
-        // console.log(this.domain);
-        console.log(this.domain);
-        // console.log(`nflPicks=${data}; expires=${expire}; domain=${this.domain}; path=/; SameSite=None; Secure`);
+        const data = JSON.stringify(this.state.weeks);
         document.cookie = `nflPicks=${data}; expires=${expire}; domain=${this.domain}; path=/;`;
-        // document.cookie = `nflPicks2=helloworld; expires=Sun, 14 Jan 2024 16:23:02 GMT; domain=192.168.0.110;`;
-        // document.cookie = `nflPicks2=helloworld; expires=Sun, 14 Jan 2024 16:23:02 GMT; domain=192.168.0.110; path=/; SameSite=None; Secure`;
 
         const jsonString = JSON.stringify(this.state.weeks);
+        this.updateRenderedWeek();
     }
 
     getCookieByName(name){
@@ -435,12 +490,10 @@ function sortByDays(weekJSON) {
         }
     });
 
-    console.log(gameDaysArray);
-
     gameDaysArray.sort((a, b) => {
         a.timeStamp - b.timeStamp
     })
-    console.log(gameDaysArray.keys());
+    // console.log(gameDaysArray.keys());
 
     return gameDaysArray;
 }
