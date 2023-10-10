@@ -20,7 +20,15 @@ class NFLweek extends HTMLElement {
             'currentWeekJSON': false,
             'weeks': []
         }
+<<<<<<< HEAD
         // console.log(document.cookie);
+=======
+        document.cookie = `nflPicks2=helloworld; expires=Sun, 14 Jan 2024 16:23:02 GMT; domain=192.168.0.100; path=/; SameSite=None`;
+        document.cookie = `nflPicks2=helloworld; expires=Sun, 14 Jan 2024 16:23:02 GMT; domain=192.168.0.100; path=/;`;
+        console.log(document.cookie);
+        console.log(document.cookies);
+        console.log(document.cookieString);
+>>>>>>> ff33a476af0bbc1d65b8d8898e763bf39563abb9
         const cookie = this.getCookieByName('nflPicks');
         // console.log(cookie);
         if (cookie) {
