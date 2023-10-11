@@ -110,17 +110,25 @@ input[type="radio"] {
 } */
 
 .week .games footer {
-    display: flex;
-    
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     width: 100%;
     color: #999;
     font-size: smaller;
     font-weight: 500;
 }
 
-.week .games footer .status {
+.week .games footer .status,
+.week .games footer .points {
     /* background-color: deeppink; */
     padding: .25rem .3rem;
+}
+.week .games footer .points {
+    text-align: right;
+}
+
+.week .games footer .points select {
+    border: none;
 }
 
 @media screen and (min-width: 700px) {
