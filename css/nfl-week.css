@@ -11,14 +11,6 @@
     text-transform: uppercase;
 }
 
-.picks {
-    position: absolute;
-    left: 0;
-    top: 0;
-    max-width: 25rem;
-    background-color: deeppink;
-}
-
 .week .header {
     display: inline-block;
     width: 100%;
@@ -187,5 +179,13 @@ input[type="radio"] {
     .week .games {
         grid-template-columns: 1fr 1fr;
     }
+
+    .picks {
+        position: absolute;
+        left: 0;
+        top: 0;
+        max-width: 25rem;
+        background-color: deeppink;
+    }    
     
 }

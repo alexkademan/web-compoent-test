@@ -42,15 +42,34 @@ class NFLweek extends HTMLElement {
 
         this.state.currentWeekJSON = weekJSON;
         this.renderWeek();
-        this.renderPicks();
+        this.renderWeekPicks();
     }
 
-    renderPicks() {
-        console.log(this.state);
+    renderWeekPicks() {        
+        const weekJSON = this.state.currentWeekJSON;
+        const days = sortByDays(weekJSON);
+        console.log(days);
+
+        const gameCount = this.state.currentWeekJSON.events.length;
+
+        let completedPicksCount = 0;
+
         const weekState = this.state.weeks[this.state.currentWeek];
-        console.log(weekState);
+        // console.log(gameCount);
+
+        for (let i = 0; i < gameCount; i = i + 1) {
+            const thisGame = this.state.currentWeekJSON.events[i];
+            const thisGameState = weekState.games[thisGame.id];
+            if (thisGameState.pick !== false && thisGameState.points !== false) {
+                completedPicksCount = completedPicksCount + 1;
+            }
+        }
+
+        console.log(gameCount);
+        console.log(completedPicksCount);
 
         const picksElement = document.createElement('picks');
+        picksElement.id = 'week-picks';
         picksElement.className = 'picks';
         picksElement.innerHTML = `
             <header>
@@ -60,6 +79,62 @@ class NFLweek extends HTMLElement {
                 </h1>
             </header>
         `;
+
+        const daysSection = document.createElement('section');
+        daysSection.className = 'picks-days';
+        days.map((day) => {
+            // console.log(day);
+            // console.log(day.games.length);
+            let pickedTeams = [];
+            for (let i = 0; i < day.games.length; i = i + 1) {
+                const thisGame = day.games[i];
+                if (weekState.games[thisGame.id].pick !== false) {
+                    pickedTeams.push(thisGame);
+                }
+            }
+            if (pickedTeams.length === 0) {
+                return false;
+            }
+
+            const dayName = getDayName(day.dateObj.getDay());
+            const monthName = getMonthName(day.dateObj.getMonth());
+
+            const dayElement = document.createElement('day');
+            dayElement.className = 'day';
+            dayElement.innerHTML = `
+                <header>
+                    <h2>${dayName}, ${monthName} ${day.dateObj.getDate()}</h2>
+                </header>
+            `;
+
+            pickedTeams.map((game) => {
+                const choice = weekState.games[game.id];
+                const competitors = game.competitions[0].competitors;
+
+                let chosenTeam = competitors[0].team;
+                if (choice.pick = 'away') { 
+                    chosenTeam = competitors[1].team;
+                }
+                console.log(chosenTeam);
+                const pickElement = document.createElement('pick');
+                pickElement.className = 'pick';
+                pickElement.innerHTML = `
+                    <img src="images/${chosenTeam.abbreviation}.png" alt="${chosenTeam.name}-logo" />
+                    <h3>${chosenTeam.displayName}</h3>
+                    <span>${choice.points ? choice.points : '-'}</span>
+                `;
+                dayElement.append(pickElement);
+            });
+
+            daysSection.append(dayElement);
+        })
+        picksElement.append(daysSection);
+
+        const weekPicksFooter = document.createElement('footer');
+        weekPicksFooter.innerHTML = `
+            <h2>${completedPicksCount} of ${gameCount}</h2>
+        `;
+        picksElement.append(weekPicksFooter);
 
         this.append(picksElement);
     }
@@ -117,17 +192,12 @@ class NFLweek extends HTMLElement {
 
         const week = this.state.currentWeekJSON.week;
         if (week.teamsOnBye) {
-            const teams = week.teamsOnBye;
-            console.log(teams);
-            
+            const teams = week.teamsOnBye;            
             const byeGames = document.createElement('div');
             byeGames.className = 'bye-games';
 
             for (let i = 0; i < teams.length; i = i + 1) {
-                console.log(teams[i]);
-                // const abbr = teams[i].abbreviation;
                 const team = teams[i];
-
                 const byeGame = document.createElement('div');
                 byeGame.className = `bye-game`;
 
@@ -540,12 +610,11 @@ function getCurrentWeek(timestamp) {
 
     const currentHash = window.location.href.split("#")[1];
     if (currentHash) {
-        console.log(currentHash);
         if (currentHash.slice(0, 5) === 'week=') {
             const urlVar = currentHash.slice(5);
             // console.log(urlVar);
             if (weekTimes[urlVar]) {
-                console.log(`week from url: ${urlVar}`);
+                // console.log(`week from url: ${urlVar}`);
                 return urlVar;
             }
             
