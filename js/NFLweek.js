@@ -355,6 +355,9 @@ class NFLweek extends HTMLElement {
         const homeTeam = game.competitions[0].competitors[0];
         const awayTeam = game.competitions[0].competitors[1];
 
+        // console.log(game);
+        // console.log(gameState);
+
         // console.log(homeTeam.team.name);
         // console.log(game.status.type.state);
         let homeScore = homeTeam.score;
@@ -420,7 +423,8 @@ class NFLweek extends HTMLElement {
                 gameDiv.className = `game pick-${e.target.value}`
             })
         }
-
+        console.log(gameState);
+        // gameDiv.innerHTML += `${gameState.pick}`;
         gameDiv.append(this.renderGameFooter(game));
         return gameDiv;
     }
@@ -659,7 +663,7 @@ function sortByDays(weekJSON) {
     });
 
     gameDaysArray.sort((a, b) => {
-        a.timeStamp - b.timeStamp
+        return a.timeStamp - b.timeStamp
     })
 
     return gameDaysArray;
