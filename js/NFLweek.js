@@ -155,6 +155,7 @@ class NFLweek extends HTMLElement {
 
         const weekNum = weekJSON.week.number;
         this.state.currentWeek = weekNum;
+        
         if (!this.state.weeks[weekNum]) {
             this.setBlankWeekState(weekJSON);
         }
@@ -355,7 +356,7 @@ class NFLweek extends HTMLElement {
         const gameDiv = document.createElement("game");
 
         let gameClass = `game state-${gameStateState}`;
-
+        
         if (gameState.pick) {
             gameClass = gameClass + ` pick-${gameState.pick}`;
         }
@@ -454,6 +455,7 @@ class NFLweek extends HTMLElement {
     }
 
     renderGameFooter(game) {
+        console.log(game.status.type.detail);
         const gameFooter = document.createElement('footer');
         gameFooter.className = "footer";
 
@@ -466,16 +468,10 @@ class NFLweek extends HTMLElement {
             gameFooter.innerHTML = `
                 <div class="status">${odds.details}${overUnder}</div>
             `;
-        } else if (
-            game.status.type.shortDetail === 'Final' ||
-            game.status.type.shortDetail === 'Final/OT'
-        ) {
-            gameFooter.innerHTML = `
-                <div class="status">${game.status.type.shortDetail}</div>
-            `;
         } else {
             gameFooter.innerHTML = `
-                <div class="status"></div>`;
+                <div class="status">${game.status.type.detail}</div>
+            `;
         }
 
         const weekState = this.state.weeks[game.week.number];
