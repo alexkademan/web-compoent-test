@@ -13,8 +13,9 @@
 
 .week .header {
     display: inline-block;
+    text-transform: capitalize;
     width: 100%;
-    border-bottom: 1px solid #999;
+    border-bottom: 1px solid #CCC;
     padding: 0;
     margin: 0;
     /* background-color : rgba(50,50,50, 0.5); */
@@ -54,6 +55,10 @@
     /* border: 4px solid #666; */
 }
 
+.week .games .game.result-correct {
+    border-color: green;
+}
+
 input[type="radio"] {
     display: none;
 }
@@ -73,7 +78,8 @@ input[type="radio"] {
     /* transition-property: opacity, left;
     transition-duration: 3s, 5s, 2s, 1s; */
 }
-.week .games label img {
+.week .games label img,
+.picks .day .pick img {
     padding: 0 .5rem 0 0;
     width: 2em;
     height: 2em;
@@ -175,6 +181,78 @@ input[type="radio"] {
     height: 2em;
 }
 
+.picks { 
+    /* background-color: #f4f4f4; */
+    padding: 0.5rem;
+    background-color: white;
+    border-radius: .5rem;
+    border: 1px #f4f4f4 solid;
+}
+
+.picks header h1 {
+    font-size: larger;
+    padding: 1rem 0 .5rem;
+    /* background-color: deeppink; */
+}
+.picks header h2 {
+    margin: 0;
+    text-transform: capitalize;
+}
+.picks header h2.week {
+    color: #999;
+    width: 100%;
+    margin: 0;
+    border-bottom: 1px #CCC solid;
+    padding-bottom: .25rem;
+}
+
+.picks header h2 .count {
+    padding-left: 0.25rem;
+}
+.picks .day {
+    display: block;
+    float: left;
+    clear: both;
+    width: 100%;
+}
+
+.picks .day header {
+    border-bottom: none;
+}
+
+.picks .day h2 {
+    text-transform: capitalize;
+    padding: 0.5rem 0 0.25rem;
+}
+
+.picks .day .pick {
+    display: grid;
+    grid-template-columns: 3rem 1fr auto;
+    align-items: top;
+    text-transform: capitalize;
+    line-height: 2.25rem;
+    border-top: 1px #CCC solid;
+}
+.picks .day .result-incorrect img,
+.picks .day .result-incorrect h3,
+.picks .day .result-incorrect .points {
+    opacity: .5;
+    filter: saturate(0);
+}
+
+.picks .day .result-incorrect h3 {
+    text-decoration: line-through;
+}
+
+.picks .day .result-correct .points {
+    color: green;
+}
+
+.picks .day .pick .points {
+    /* background-color: deeppink; */
+}
+
+
 @media screen and (min-width: 700px) {
     .week .games {
         grid-template-columns: 1fr 1fr;
@@ -184,8 +262,7 @@ input[type="radio"] {
         position: absolute;
         left: 0;
         top: 0;
-        max-width: 25rem;
-        background-color: deeppink;
+        max-width: 15rem;
     }    
     
 }
