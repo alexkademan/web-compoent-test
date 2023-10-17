@@ -45,6 +45,7 @@
     border: none;
     font-size: 1em;
     font-family: 'Oswald', sans-serif;
+    padding: 0 1rem;
 }
 
 .week .day h2 {
