@@ -12,7 +12,8 @@
 }
 
 .week .header {
-    display: inline-block;
+    display: grid;
+    grid-template-columns: auto 1fr;
     text-transform: capitalize;
     width: 100%;
     border-bottom: 1px solid #CCC;
@@ -36,6 +37,14 @@
 
 .week header .week-count {
     color: #999;
+}
+
+.week header .current-player {
+    align-items: end;
+    text-align: right;
+    border: none;
+    font-size: 1em;
+    font-family: 'Oswald', sans-serif;
 }
 
 .week .day h2 {

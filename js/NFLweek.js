@@ -51,14 +51,9 @@ class NFLweek extends HTMLElement {
     renderWeekPicks() {        
         const weekJSON = this.state.currentWeekJSON;
         const days = sortByDays(weekJSON);
-        // console.log(days);
-
         const gameCount = this.state.currentWeekJSON.events.length;
-
         let completedPicksCount = 0;
-
         const weekState = this.state.weeks[this.state.currentWeek];
-        // console.log(gameCount);
 
         for (let i = 0; i < gameCount; i = i + 1) {
             const thisGame = this.state.currentWeekJSON.events[i];
@@ -69,9 +64,6 @@ class NFLweek extends HTMLElement {
         }
 
         const picksElement = document.createElement('picks');
-        // picksElement.innerHTML = '';
-        // this.append(picksElement);
-
         picksElement.id = 'week-picks';
         picksElement.className = 'picks';
         picksElement.innerHTML = `
@@ -80,7 +72,7 @@ class NFLweek extends HTMLElement {
                     week ${this.state.currentWeek},
                     <span class="count">${this.state.currentWeekJSON.events.length} games</span>
                 </h2>
-                <h1>${this.state.currentPlayer}</h1>
+                ${this.state.currentPlayer ? `<h1>${this.state.currentPlayer}</h1>` : ''}
             </header>
         `;
 
