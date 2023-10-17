@@ -209,9 +209,9 @@ input[type="radio"] {
 .picks header h2 .count {
     padding-left: 0.25rem;
 }
-.picks .day {
-    display: block;
-    float: left;
+.picks .day,
+.picks .week-picks-footer {
+    display: flexbox;
     clear: both;
     width: 100%;
 }
@@ -236,7 +236,7 @@ input[type="radio"] {
 .picks .day .result-incorrect img,
 .picks .day .result-incorrect h3,
 .picks .day .result-incorrect .points {
-    opacity: .5;
+    opacity: .3;
     filter: saturate(0);
 }
 
@@ -248,8 +248,19 @@ input[type="radio"] {
     color: green;
 }
 
-.picks .day .pick .points {
-    /* background-color: deeppink; */
+.picks .week-picks-footer {
+    text-transform: lowercase;
+}
+.picks .week-picks-footer h2 {
+    padding: 1.75rem 0 1rem;
+    text-align: center;
+}
+.picks .week-picks-footer h2 .in-progress,
+.picks .week-picks-footer h2 .points {
+    color: #999;
+}
+.picks .week-picks-footer h2 .points {
+    padding-left: 0.5rem;
 }
 
 
@@ -260,8 +271,8 @@ input[type="radio"] {
 
     .picks {
         position: absolute;
-        left: 0;
-        top: 0;
+        left: 2rem;
+        top: 2rem;
         max-width: 15rem;
     }    
     
