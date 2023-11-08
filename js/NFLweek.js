@@ -34,6 +34,14 @@ class NFLweek extends HTMLElement {
         this.fetchWeekAjax(currentWeek);
     }
 
+    disconnectedCallback() {
+        console.log('disconnectedCallback');
+    }
+
+    adoptedCallback() {
+        console.log('adoptedCallback');
+    }
+
     async fetchWeekAjax(currentWeek) {
         const response = await fetch(`https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?seasontype=2&week=${currentWeek}`);
         const weekJSON = await response.json();
